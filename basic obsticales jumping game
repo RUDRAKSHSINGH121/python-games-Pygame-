@@ -1,0 +1,93 @@
+import pygame
+import random
+
+# Initialize pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 800, 300
+GROUND_HEIGHT = 40
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Simple Dino Game")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GRAY = (200, 200, 200)
+
+# Dino variables
+dino_width, dino_height = 44, 47
+dino_x = 50
+dino_y = HEIGHT - GROUND_HEIGHT - dino_height
+dino_vel_y = 0
+gravity = 1
+jump_power = 15
+is_jumping = False
+
+# Obstacle variables
+obstacle_width, obstacle_height = 20, 40
+obstacle_x = WIDTH
+obstacle_y = HEIGHT - GROUND_HEIGHT - obstacle_height
+obstacle_speed = 6
+
+# Score
+score = 0
+font = pygame.font.Font(None, 36)
+
+clock = pygame.time.Clock()
+running = True
+
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if (event.key == pygame.K_SPACE or event.key == pygame.K_UP) and not is_jumping:
+                dino_vel_y = -jump_power
+                is_jumping = True
+
+    # Dino jump physics
+    dino_y += dino_vel_y
+    dino_vel_y += gravity
+    if dino_y >= HEIGHT - GROUND_HEIGHT - dino_height:
+        dino_y = HEIGHT - GROUND_HEIGHT - dino_height
+        is_jumping = False
+
+    # Move obstacle
+    obstacle_x -= obstacle_speed
+    if obstacle_x < -obstacle_width:
+        obstacle_x = WIDTH + random.randint(0, 200)
+        score += 1
+
+    # Collision detection
+    dino_rect = pygame.Rect(dino_x, dino_y, dino_width, dino_height)
+    obstacle_rect = pygame.Rect(obstacle_x, obstacle_y, obstacle_width, obstacle_height)
+    if dino_rect.colliderect(obstacle_rect):
+        running = False
+
+    # Draw everything
+    screen.fill(WHITE)
+    pygame.draw.rect(screen, GRAY, (0, HEIGHT - GROUND_HEIGHT, WIDTH, GROUND_HEIGHT))
+    pygame.draw.rect(screen, BLACK, (dino_x, dino_y, dino_width, dino_height))
+    pygame.draw.rect(screen, (34, 139, 34), (obstacle_x, obstacle_y, obstacle_width, obstacle_height))
+    score_text = font.render(f"Score: {score}", True, BLACK)
+    screen.blit(score_text, (10, 10))
+    pygame.display.flip()
+    clock.tick(60)
+
+# Game Over screen
+screen.fill(WHITE)
+game_over_text = font.render("Game Over! Press any key to exit.", True, (255, 0, 0))
+score_text = font.render(f"Final Score: {score}", True, BLACK)
+screen.blit(game_over_text, (WIDTH // 2 - 200, HEIGHT // 2 - 30))
+screen.blit(score_text, (WIDTH // 2 - 100, HEIGHT // 2 + 10))
+pygame.display.flip()
+
+# Wait for key press to exit
+waiting = True
+while waiting:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
+            waiting = False
+pygame.quit()
